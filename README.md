@@ -5,9 +5,10 @@ To run app
 ------------------------------------------------------------------------------------------------------
 
 <code>
+<pre>
 cd asset_compiler
-
 ruby app.rb
+</pre>
 </code>
 
 Curl command to append a script to an asset set named 'cat_fancy' (asset set will be created if it doesn't exist)

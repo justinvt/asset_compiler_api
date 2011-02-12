@@ -4,12 +4,12 @@ Examples
 To run app
 ------------------------------------------------------------------------------------------------------
 
-<code>
 <pre>
+<code>
 cd asset_compiler
 ruby app.rb
-</pre>
 </code>
+</pre>
 
 Curl command to append a script to an asset set named 'cat_fancy' (asset set will be created if it doesn't exist)
 ------------------------------------------------------------------------------------------------------

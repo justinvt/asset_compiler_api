@@ -1,0 +1,12 @@
+Install
+=======================
+
+git clone git://github.com/SparkartGroupInc/backbone-js-table-editor.git
+cd backbone-js-table-editor
+ruby backbone.rb
+
+
+In your browser visit:
+
+http://localhost:4567/index.html
+

@@ -1,0 +1,26 @@
+# WORK IN PROGESS - I'm writing these as I create a new backbone js mini app to recount which steps I took
+
+1) What are your models?  
+
+The easiest way to determine what is a model is to think of the data you'll be dealing with.  What logical blocks can you group the data/variables into to express the fact that they are all attributes of a single object?  What is the name of the app/widget you're creating?  What tables in the database will you be reading from?  Your verbal description may serve as a shortcut.  For instance, if we are creating a file uploader, we will be inserting files into the files table in the database.  We may also want to display a group of files - a *collection* of many uploads.  If that is the case, let's create a *model* called Upload and a *collection* called Album.
+
+2) What are your views?
+
+This should be just as simple.  How many different ways will an Upload be presented?  We shouldn't count a view twice if it's the same in two cases, but with a different background color.  Essentially if one mode of displaying the upload can *easily* be transformed into another with css alone, we should combine those modes into a single view - *UploadView.*  If, however, we have a static way of displaying an upload and a form to edit an upload or create a new one, we should consider creating a separate view for each situation.  This would require the addition of an *UploadFormView*.  The notion of creating multiple views to present data from a single object is a natural consequence of the underlying ideology of backbone.js and is encouraged.  As a rule of thumb, there will be at least one view for every model and collection.  For our example, let's say we've concluded that we'll need the following views:
+
+UploadView, UploadFormView, AlbumView
+
+3) How should the app/widget be initialized and what does it do?  What would we like to be configurable, and decisions would we like to hide from the user?
+
+An individual backbone.js app should be viewed as a plugin.  We want to encapsulate as much repetition as possible, although we'd also like to offer the user a simple interface for configuring the app's appearance and behavior.  Ideally, we'd like to offer developers the option of doing something like this...
+
+$("form").fileUploader({
+	format: "album",
+	progess_bar: true,
+	url: "albums/5/photos",
+	delete_confirmation: "This is a permanent change.  Are you sure?"
+})
+
+but also allow:
+
+$("form").fileUploader()

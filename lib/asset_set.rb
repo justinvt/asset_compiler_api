@@ -2,6 +2,7 @@ require 'digest/md5'
 require 'json'
 require 'net/http'
 require 'uri'
+require 'lib/upload/s3.rb'
 
 class AssetSet
   
@@ -9,7 +10,7 @@ class AssetSet
   @@compiled_directory = "public/compiled"
 
   
-  attr_accessor :name, :files, :file_list, :js, :css, :sort, :assets
+  attr_accessor :name, :md5, :compiled_code, :files, :file_list, :js, :css, :sort, :assets, :url
   
   def initialize(name, *files)
     @name = name
@@ -24,8 +25,10 @@ class AssetSet
     File.join(@@compiled_directory, name + ".cat." + filetype.to_s )
   end
   
-  def compiled_file(filetype = :js)
-    File.join(@@compiled_directory, name + "." + filetype.to_s )
+  
+  def compiled_file(options={})
+    options[:filetype] ||= :js
+    File.join( @@compiled_directory, [ name, md5, options[:filetype].to_s].join(".") )
   end
   
   def append(file_hash)
@@ -48,25 +51,33 @@ class AssetSet
     "WHITESPACE_ONLY"
   end
   
+  def compiler_response
+     res = Net::HTTP.post_form( URI.parse(@@compiler_api_url),
+              {
+                'js_code'           => concatenate,
+                'compilation_level' => compilation_level, 
+                'output_format' => 'json',
+                'output_info'   => 'compiled_code'
+              })
+
+      res = JSON.parse( res.body )
+  end
+  
   def compile
-    res = Net::HTTP.post_form( URI.parse(@@compiler_api_url),
-            {
-              'js_code'           => concatenate,
-              'compilation_level' => compilation_level, 
-              'output_format' => 'json',
-              'output_info'   => 'compiled_code'
-            })
-    res = JSON.parse( res.body )
+    
+    @compiled_code = compiler_response["compiledCode"]
+    @md5 = Digest::MD5.hexdigest(@compiled_code)
     
     f = File.open(compiled_file,"w+")
-    f.puts res["compiledCode"]
+    f.puts @compiled_code
     f.close
     
     return File.read(compiled_file)
   end
   
   def upload
-    Upload::S3.upload(:file => compiled_file)
+    object = Upload::AWSS3.upload(:file => compiled_file)
+    @url = object.url
   end
   
 end

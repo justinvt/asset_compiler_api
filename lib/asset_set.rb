@@ -65,4 +65,8 @@ class AssetSet
     return File.read(compiled_file)
   end
   
+  def upload
+    Upload::S3.upload(:file => compiled_file)
+  end
+  
 end

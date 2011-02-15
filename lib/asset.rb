@@ -1,8 +1,3 @@
-require 'open-uri'
-require 'pathname'
-require 'ostruct'
-
-
 class Asset
   
   @@defaults = {}

@@ -1,7 +1,4 @@
-require 'digest/md5'
-require 'json'
-require 'net/http'
-require 'uri'
+
 require 'lib/upload/s3.rb'
 
 class AssetSet
@@ -14,17 +11,16 @@ class AssetSet
   attr_accessor :name, :md5, :cat_md5, :compiled_code, :catted_code, :compile_type, :files, :file_list, :js, :css, :sort, :assets, :url, :from
   
   def initialize(name, options = {})
-    puts "Initializing asset set #{name}"
+
     @name = name
     @sort  = 0
     @file_list = {}
     @from = options[:from] || []
-    @files = options[:files].to_a.uniq.flatten || []
+    @files = []
     @compile_type = options[:compile_type] || @@default_compile_type
     @assets = []
-    puts "Appending files: " + @files.inspect
-    @files.each do |f|
-      puts "Appending #{f}"
+    initialize_files =  options[:files].to_a.uniq.flatten 
+    initialize_files.each do |f|
       append(f)
     end
     self
@@ -35,7 +31,7 @@ class AssetSet
   end
   
   def to_tiny_yaml
-    {:files => files, :url => url, :md5 => md5}
+    {:files => files, :url => url, :md5 => md5, :cat_md5 => cat_md5}
   end
   
   def yaml_save(yaml_file=YAML_FILE)
@@ -57,20 +53,23 @@ class AssetSet
   def append(file_hash)
     file = file_hash.is_a?(String) ? {:url => file_hash} : file_hash
     asset = Asset.new( file )
+   # puts "Appending path #{asset.path} to #{files.inspect}"
     unless files.include?(asset.path)
       assets << asset
       files << asset.path
       file_list[asset.ext] ||= []
       file_list[asset.ext] << asset
     end
+  #  puts "File list now: #{files.inspect}"
   end
   
   def concatenate
+   # puts "catting #{files.size} assets"
     @catted_code = assets.uniq.map{|a| a.contents }.join("\n")
     @cat_md5     = Digest::MD5.hexdigest( @catted_code )
     unless File.exist? catted_file
       f = File.open(catted_file,"w+")
-      f.puts catted_content
+      f.puts  @catted_code
       f.close
     end
     return open(catted_file).read
@@ -91,7 +90,7 @@ class AssetSet
 
       res = JSON.parse( res.body )
       if res["serverErrors"].length > 0
-        res["serverErrors"].each{|e| puts "Error " + e["code"].to_s + ": " + e["error"]}
+       # res["serverErrors"].each{|e| puts "Error " + e["code"].to_s + ": " + e["error"]}
         return {"compiledCode" => ""}
       else
         return res
@@ -115,12 +114,24 @@ class AssetSet
     @url
   end
   
+  def uploaded?
+    @url
+  end
+  
+  def compiled?
+    @md5
+  end
+  
+  def catted?
+    @cat_md5
+  end
+  
   def compiled_url
-    if url
+    if uploaded?
       url
-    elsif md5
+    elsif compiled?
       compiled_file
-    elsif cat_md5
+    elsif catted?
       catted_file
     else
       concatenate
